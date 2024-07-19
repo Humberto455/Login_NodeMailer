@@ -51,13 +51,13 @@ app.post('/api/forgot-password', (req, res) => {
   const { email } = req.body;
   const token = jwt.sign({ email }, 'secretKey', { expiresIn: '1h' });
 
-  const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+  // No se envía el enlace, solo el token
   const subject = 'Restablecimiento de contraseña';
-  const text = `Para restablecer tu contraseña, haz clic en el siguiente enlace: ${resetLink}`;
+  const text = `Tu token de recuperación es: ${token}`;
 
   sendVerificationEmail(email, subject, text)
     .then(() => {
-      res.status(200).json({ message: 'Correo de restablecimiento enviado' });
+      res.status(200).json({ message: 'Token de recuperación enviado al correo' });
     })
     .catch((error) => {
       console.error(error);
@@ -113,8 +113,9 @@ app.post('/api/reset-password', (req, res) => {
 
     const email = decoded.email;
     try {
-      const hashedPassword = await bcrypt.hash(newPassword, 10); // Encripta la nueva contraseña
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
 
+      // Cambia la búsqueda por email en lugar de username
       const query = 'UPDATE users SET password = ? WHERE username = ?';
       db.query(query, [hashedPassword, email], (err, result) => {
         if (err) {
